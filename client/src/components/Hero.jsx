@@ -1,8 +1,29 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { assets } from '../assets/assets';
 import { cities } from '../assets/assets';
+import { useAppContext } from '../context/AppContext';
 
 const Hero = () => {
+  const {navigate, getToken, axios, setSearchedCities} = useAppContext()
+  const [destination, setDestination] = useState("")
+
+  const onSearch = async ()=>{
+    e.preventDefault();
+    navigate('/rooms?destinations=${destination}')
+
+    //call api to save recent searched city -->>
+    await axios.post('/api/user/store-recent-search', {recentSearchedCity: destination}, {headers: {Authorization: `Bearer ${await getToken()}`}});
+
+
+    //add destination to searchedcities max 3 recent searched cities -->>
+   setSearchedCities((prevSearchedCities) => {
+  const updatedSearchedCities = [...prevSearchedCities, destination];
+  if(updatedSearchedCities.length > 3){
+    updatedSearchedCities.shift();
+  }
+  return updatedSearchedCities;
+   });
+  }
   return (
     <div className='flex flex-col items-start justify-center px-6 md:px-16 lg:px-24 xl:px-32 text-white bg-[url("/src/assets/heroImage.png")] bg-no-repeat bg-cover bg-center h-screen'>
       

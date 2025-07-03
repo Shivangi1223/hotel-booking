@@ -4,12 +4,14 @@ import FeaturedDestination from '../components/FeaturedDestination'
 import ExclusiveOffers from '../components/ExclusiveOffers'
 import Testimonial from '../components/Testimonial'
 import NewsLetter from '../components/NewsLetter'
+import RecommendedHotels from '../components/RecommendedHotels'
 
 const Home = () => {
   return (
     <>
       <Hero />
-      <div className="space-y-24"> {/* ✅ add spacing between sections */}
+      <div className="space-y-24"> 
+        <RecommendedHotels/>
         <FeaturedDestination />
         <ExclusiveOffers />
         <Testimonial />
