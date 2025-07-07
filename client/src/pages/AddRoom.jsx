@@ -30,18 +30,18 @@ const AddRoom = () => {
 
   const [loading, setLoading] = useState(false)
 
-  const onSubmitHandler = async () => {
+  const onSubmitHandler = async (e) => {
     e.preventDefault()
 
     //check if all inputs are filled -->>
-    if (!inputs.roomType || inputs.pricePerNight || !inputs.amenities ||
-      !Object.values(images).some(image => image)) {
-      toast.error("Please fill in all the details")
-      return;
-    }
+    if (!inputs.roomType || !inputs.pricePerNight || !Object.values(images).some(image => image)) {
+  toast.error("Please fill in all the details");
+  return;
+}
+
     setLoading(true);
     try {
-      const formData = new formData()
+      const formData = new FormData()
       formData.append('roomType', inputs.roomType)
       formData.append('pricePerNight', inputs.pricePerNight)
       //converting amenities to array & keeping only enabled amenities -->>
