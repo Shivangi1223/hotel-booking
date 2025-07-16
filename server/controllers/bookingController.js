@@ -14,7 +14,7 @@ export const checkAvailability = async ({ checkInDate, checkOutDate, room }) => 
 
     return bookings.length === 0;
   } catch (error) {
-    console.error("❌ Availability Check Failed:", error);
+    console.error("Availability Check Failed:", error);
     return false;
   }
 };
@@ -31,7 +31,7 @@ export const checkAvailabilityAPI = async (req, res) => {
     const isAvailable = await checkAvailability({ checkInDate, checkOutDate, room });
     res.json({ success: true, isAvailable });
   } catch (error) {
-    console.error("❌ Availability API Error:", error);
+    console.error("Availability API Error:", error);
     res.json({ success: false, message: error.message });
   }
 };
@@ -120,7 +120,7 @@ export const getUserBookings = async (req, res) => {
 
     res.json({ success: true, bookings });
   } catch (error) {
-    console.error("❌ Failed to fetch user bookings:", error);
+    console.error("Failed to fetch user bookings:", error);
     res.json({ success: false, message: "Failed to fetch bookings" });
   }
 };
@@ -150,7 +150,7 @@ export const getHotelBookings = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("❌ Failed to fetch hotel bookings:", error);
+    console.error("Failed to fetch hotel bookings:", error);
     res.json({ success: false, message: "Failed to fetch bookings" });
   }
 };
