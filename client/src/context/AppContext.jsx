@@ -21,7 +21,7 @@ export const AppProvider = ({ children }) => {
   const [searchedCities, setSearchedCities] = useState([]);
   const [rooms, setRooms] = useState([]);
 
-  // ✅ Fetch Rooms from Backend
+  // Fetch Rooms from Backend
   const fetchRooms = async () => {
     try {
       const { data } = await axios.get('/api/rooms');
@@ -35,7 +35,7 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // ✅ Fetch User Info (role, searched cities)
+  // Fetch User Info (role, searched cities)
   const fetchUser = async () => {
     try {
       const { data } = await axios.get('/api/user', {
@@ -57,7 +57,7 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // ✅ Run when user is available
+  // Run when user is available
   useEffect(() => {
     if (user) {
       fetchUser();
