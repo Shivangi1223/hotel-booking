@@ -2,6 +2,8 @@ import transporter from "../configs/nodemailer.js";
 import Booking from "../models/Booking.js";
 import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
+import Stripe from 'stripe';
+
 
 // Function to check availability of room
 export const checkAvailability = async ({ checkInDate, checkOutDate, room }) => {
@@ -152,5 +154,51 @@ export const getHotelBookings = async (req, res) => {
   } catch (error) {
     console.error("Failed to fetch hotel bookings:", error);
     res.json({ success: false, message: "Failed to fetch bookings" });
+  }
+};
+
+
+const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+export const stripePayment = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) return res.status(404).json({ success: false, message: "Booking not found" });
+
+    const roomData = await Room.findById(booking.room).populate('hotel');
+    if (!roomData) return res.status(404).json({ success: false, message: "Room not found" });
+
+    const totalPrice = Math.round(booking.totalPrice * 100);
+    const { origin } = req.headers;
+
+    const line_items = [
+      {
+        price_data: {
+          currency: "inr", // change if needed
+          product_data: {
+            name: roomData.hotel.name,
+          },
+          unit_amount: totalPrice,
+        },
+        quantity: 1,
+      },
+    ];
+
+    const session = await stripeInstance.checkout.sessions.create({
+      payment_intent_data: {
+        metadata: { bookingId },
+      },
+      line_items,
+      mode: "payment",
+      success_url: `${origin}/loader/my-bookings`,
+      cancel_url: `${origin}/my-bookings`,
+    });
+
+    res.json({ success: true, url: session.url });
+  } catch (error) {
+    console.error("Stripe payment error:", error);
+    res.status(500).json({ success: false, message: "Payment Failed", error: error.message });
   }
 };
