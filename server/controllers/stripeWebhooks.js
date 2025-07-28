@@ -4,6 +4,7 @@ import Booking from "../models/Booking.js";
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const stripeWebhooks = async (request, response) => {
+  console.log("📥 Stripe Webhook hit!"); 
   const sig = request.headers['stripe-signature'];
   let event;
 
@@ -14,15 +15,16 @@ export const stripeWebhooks = async (request, response) => {
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
-    console.error("❌ Webhook signature verification failed:", err.message);
+    console.error("Webhook signature verification failed:", err.message);
     return response.status(400).send(`Webhook Error: ${err.message}`);
   }
 
+  // Handle checkout session completed
   if (event.type === "checkout.session.completed") {
     const session = event.data.object;
     const bookingId = session.metadata?.bookingId;
 
-    console.log("✅ Webhook received for booking:", bookingId);
+    console.log("✅ Stripe Webhook: Payment completed for Booking ID:", bookingId);
 
     if (!bookingId) {
       console.error("❌ No bookingId found in session metadata");
@@ -34,20 +36,24 @@ export const stripeWebhooks = async (request, response) => {
         bookingId,
         {
           isPaid: true,
-          status: "confirmed", // ✅ Matches your schema enum
+          status: "paid", 
           paymentMethod: "Stripe",
         },
         { new: true }
       );
 
-      console.log("✅ Booking updated successfully:", updatedBooking);
+      if (updatedBooking) {
+        console.log("Booking updated to 'paid':", updatedBooking._id);
+      } else {
+        console.warn("Booking not found for ID:", bookingId);
+      }
     } catch (err) {
-      console.error("❌ Failed to update booking:", bookingId, "Error:", err.message);
-      // Still return 200 so Stripe doesn't retry the webhook
+      console.error("Failed to update booking:", bookingId, "Error:", err.message);
     }
   } else {
-    console.log("ℹ️ Unhandled event type:", event.type);
+    console.log("Unhandled Stripe event type:", event.type);
   }
 
-  response.json({ received: true });
+ 
+  response.status(200).json({ received: true });
 };

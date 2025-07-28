@@ -47,9 +47,10 @@ const handlePayment = async (bookingId) => {
       }
     );
 
-    const data = response.data; // ⭐️ extract actual data from response
+    const data = response.data;
 
     if (data.success) {
+      localStorage.setItem('paidBookingId', bookingId); // ✅ Save to localStorage
       window.location.href = data.url;
     } else {
       toast.error(data.message);
@@ -59,13 +60,41 @@ const handlePayment = async (bookingId) => {
   }
 };
 
+
 useEffect(() => {
   const timer = setTimeout(() => {
-    if (user) fetchUserBookings();
-  }, 200); // slight delay for Clerk user to be ready
+    if (user) {
+      fetchUserBookings().then(() => {
+        const searchParams = new URLSearchParams(window.location.search);
+        const success = searchParams.get("success");
+        const cancelled = searchParams.get("cancelled");
+
+        if (success) {
+          const paidBookingId = localStorage.getItem("paidBookingId");
+
+          if (paidBookingId) {
+            setBookings(prev =>
+              prev.map(booking =>
+                booking._id === paidBookingId
+                  ? { ...booking, isPaid: true } // ✅ Mark as paid in state
+                  : booking
+              )
+            );
+
+            localStorage.removeItem("paidBookingId"); // cleanup
+          }
+        }
+
+        if (cancelled) {
+          localStorage.removeItem("paidBookingId"); // cleanup even on cancel
+        }
+      });
+    }
+  }, 200);
 
   return () => clearTimeout(timer);
 }, [user]);
+
 
 
   return (
@@ -129,17 +158,26 @@ useEffect(() => {
             </div>
 
             {/* -------- Payment Status --------- */}
-            <div className='flex flex-col items-start justify-center pt-3'>
-              <div className='flex items-center gap-2'>
-                <div className={`h-3 w-3 rounded-full ${booking.isPaid ? "bg-green-500" : "bg-red-500"}`}></div>
-                <p className={`text-sm ${booking.isPaid ? "text-green-500" : "text-red-500"}`}>
-                  {booking.isPaid ? "Paid" : "UnPaid"}
-                </p>
-              </div>
-              {!booking.isPaid && (
-                <button onClick={()=>handlePayment(booking._id)} className='px-4 py-1.5 mt-4 text-xs border border-gray-400 rounded-full hover:bg-gray-50 transition-all cursor-pointer'>Pay Now</button>
-              )}
-            </div>
+           {/* -------- Payment Status --------- */}
+<div className='flex flex-col items-start justify-center pt-3'>
+  <div className='flex items-center gap-2'>
+    {/* THIS IS WHAT YOU SHOULD UNCOMMENT & FIX */}
+    <div className={`h-3 w-3 rounded-full ${booking.isPaid ? "bg-green-500" : "bg-red-500"}`}></div>
+    <p className={`text-sm ${booking.isPaid ? "text-green-500" : "text-red-500"}`}>
+      {booking.isPaid ? "Paid" : "UnPaid"}
+    </p>
+  </div>
+
+  {!booking.isPaid && (
+    <button
+      onClick={() => handlePayment(booking._id)}
+      className='px-4 py-1.5 mt-4 text-xs border border-gray-400 rounded-full hover:bg-gray-50 transition-all cursor-pointer'
+    >
+      Pay Now
+    </button>
+  )}
+</div>
+
           </div>
         ))}
       </div>
